@@ -11,6 +11,7 @@ import land.face.arena.tasks.WaveStartRunner;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
 
@@ -18,33 +19,37 @@ public class ArenaInstance {
 
   private final Arena arena;
   private final String instanceId;
+  private final Location location;
   private final Player player;
   private int wave = 0;
   private long startTime = System.currentTimeMillis();
 
-  private WaveRunner runner;
-  private WaveStartRunner waveDelay;
+  private WaveRunner waveRunner;
+  private WaveStartRunner waveStartRunner;
+  private ArenaKickRunner arenaKickRunner;
 
   public ArenaInstance(Arena arena, Player player, String instanceId) {
     this.arena = arena;
     this.player = player;
     this.instanceId = instanceId;
+    this.location = arena.getInstances().get(instanceId).asLocation();
   }
 
   public void beginNextWave() {
-    if (runner != null && !runner.isCancelled()) {
+    if (waveRunner != null && !waveRunner.isCancelled()) {
       Bukkit.getLogger().warning("Tried to begin a wave when there's already one running!");
       return;
     }
-    if (waveDelay != null && !waveDelay.isCancelled()) {
-      waveDelay.cancel();
-      waveDelay = null;
+    if (waveStartRunner != null && !waveStartRunner.isCancelled()) {
+      waveStartRunner.cancel();
+      waveStartRunner = null;
     }
-    runner = new WaveRunner(this, arena.getWaves().get(wave), arena.getInstances().get(instanceId));
-    runner.runTaskTimer(StrifeArenaPlugin.getInstance(), 1L, 20L);
+    waveRunner = new WaveRunner(this, arena.getWaves().get(wave), location);
+    waveRunner.runTaskTimer(StrifeArenaPlugin.getInstance(), 1L, 20L);
     wave++;
     TitleUtils.sendTitle(player, TextUtils.color("&6Prepare For Battle!"),
         TextUtils.color("&eWave &f" + wave + " &ehas begun!"));
+    player.getWorld().playSound(location, Sound.EVENT_RAID_HORN, 1, 1);
     Location loc = arena.getInstances().get(instanceId).asLocation();
     loc.getBlock().setType(Material.AIR);
   }
@@ -73,31 +78,50 @@ public class ArenaInstance {
       doArenaEnd(player);
       return;
     }
-    bumpRecord(-1);
+    bumpRecord(player, -1);
     Location loc = arena.getInstances().get(instanceId).asLocation();
     loc.getBlock().setType(Material.CHEST);
     loc.getBlock()
         .setMetadata("ARENA_CHEST", new FixedMetadataValue(StrifeArenaPlugin.getInstance(), true));
     TitleUtils.sendTitle(player, TextUtils.color("&cWAVE VANQUISHED!"),
         TextUtils.color("&eCompleted Wave &f" + wave + "&e!"));
-    waveDelay = null;
-    waveDelay = new WaveStartRunner(this);
-    waveDelay.runTaskTimer(StrifeArenaPlugin.getInstance(), 100L, 20L);
+    waveStartRunner = null;
+    waveStartRunner = new WaveStartRunner(this);
+    waveStartRunner.runTaskTimer(StrifeArenaPlugin.getInstance(), 100L, 20L);
   }
 
   public void doArenaEnd(Player player) {
-    if (waveDelay != null && !waveDelay.isCancelled()) {
-      waveDelay.cancel();
-      waveDelay = null;
+    if (waveStartRunner != null && !waveStartRunner.isCancelled()) {
+      waveStartRunner.cancel();
+      waveStartRunner = null;
     }
-    bumpRecord(System.currentTimeMillis() - startTime);
-    Location loc = arena.getInstances().get(instanceId).asLocation();
-    loc.getBlock().setType(Material.ENDER_CHEST);
-    StrifeArenaPlugin.getInstance().getLootManager().explodeLoot(player, loc);
-    TitleUtils.sendTitle(player, TextUtils.color("&2ARENA COMPLETE!"),
-        TextUtils.color("&aCompleted all &f" + wave + " &awaves!"));
-    runner = null;
-    new ArenaKickRunner(this).runTaskTimer(StrifeArenaPlugin.getInstance(), 100L, 20L);
+    bumpRecord(player, System.currentTimeMillis() - startTime);
+    location.getBlock().setType(Material.ENDER_CHEST);
+    StrifeArenaPlugin.getInstance().getLootManager().explodeLoot(player, location);
+    if (arena.getWaves().size() != wave) {
+      TitleUtils.sendTitle(player, TextUtils.color("&2ARENA ENDED!"),
+          TextUtils.color("&aCompleted &f" + wave + " &awaves!"));
+      player.playSound(location, Sound.ENTITY_PLAYER_LEVELUP, 1, 0.8F);
+    } else {
+      TitleUtils.sendTitle(player, TextUtils.color("&2ARENA COMPLETE!"),
+          TextUtils.color("&aCompleted all &f" + wave + " &awaves!"));
+      player.playSound(location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1.5F);
+    }
+    arenaKickRunner = null;
+    arenaKickRunner = new ArenaKickRunner(this);
+    arenaKickRunner.runTaskTimer(StrifeArenaPlugin.getInstance(), 100L, 20L);
+  }
+
+  public void cancelTimers() {
+    if (waveRunner != null && !waveRunner.isCancelled()) {
+      waveRunner.cancel();
+    }
+    if (waveStartRunner != null && !waveStartRunner.isCancelled()) {
+      waveStartRunner.cancel();
+    }
+    if (arenaKickRunner != null && !arenaKickRunner.isCancelled()) {
+      arenaKickRunner.cancel();
+    }
   }
 
   public Arena getArena() {
@@ -112,7 +136,7 @@ public class ArenaInstance {
     return player;
   }
 
-  private void bumpRecord(long time) {
+  private void bumpRecord(Player player, long time) {
     if (arena.getRecords() == null) {
       arena.setRecords(new HashMap<>());
     }
@@ -121,6 +145,6 @@ public class ArenaInstance {
       record = new Record();
       arena.getRecords().put(player.getUniqueId(), record);
     }
-    Record.bumpRecord(record, wave, time);
+    Record.bumpRecord(player, record, wave, time);
   }
 }

@@ -13,6 +13,7 @@ import land.face.arena.listeners.ArenaExitListener;
 import land.face.arena.listeners.MobDropListener;
 import land.face.arena.managers.ArenaManager;
 import land.face.arena.managers.LootManager;
+import land.face.arena.managers.RecordManager;
 import land.face.arena.menu.ArenaRewardsMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
@@ -27,6 +28,7 @@ public class StrifeArenaPlugin extends JavaPlugin {
 
   private ArenaManager arenaManager;
   private LootManager lootManager;
+  private RecordManager recordManager;
 
   private ArenaRewardsMenu rewardsMenu;
 
@@ -55,6 +57,7 @@ public class StrifeArenaPlugin extends JavaPlugin {
 
     arenaManager = new ArenaManager();
     lootManager = new LootManager();
+    recordManager = new RecordManager(this);
 
     Bukkit.getPluginManager().registerEvents(new ArenaExitListener(this), this);
     Bukkit.getPluginManager().registerEvents(new ArenaChestListener(this), this);
@@ -66,6 +69,7 @@ public class StrifeArenaPlugin extends JavaPlugin {
     commandHandler.registerCommands(new BaseCommand(this));
 
     arenaManager.loadArenas();
+    arenaManager.updateRecordUsernames();
 
     Bukkit.getServer().getLogger().info("StrifeArena Enabled!");
   }
@@ -87,6 +91,10 @@ public class StrifeArenaPlugin extends JavaPlugin {
 
   public LootManager getLootManager() {
     return lootManager;
+  }
+
+  public RecordManager getRecordManager() {
+    return recordManager;
   }
 
   public ArenaRewardsMenu getRewardsMenu() {

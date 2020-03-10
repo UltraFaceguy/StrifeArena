@@ -7,9 +7,14 @@ import java.util.Random;
 import java.util.UUID;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.strife.StrifePlugin;
+import land.face.strife.util.FireworkUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.FireworkEffect.Type;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerKickEvent;
@@ -96,12 +101,21 @@ public class LootManager {
     double money = cashMap.getOrDefault(player.getUniqueId(), 0D);
     double exp = expMap.getOrDefault(player.getUniqueId(), 0D);
     if (money >= 1) {
+      MessageUtils.sendMessage(player,
+          "&eArena Reward: &f" + StrifeArenaPlugin.INT_FORMAT.format(money) + " Bits&e!");
       MintPlugin.getInstance().getEconomy().depositPlayer(player, money);
-      MessageUtils.sendMessage(player, "&a+&f" + StrifeArenaPlugin.INT_FORMAT.format(money) + " Bits&a!");
     }
     if (exp >= 1) {
+      MessageUtils.sendMessage(player,
+          "&2Arena Reward: &f" + StrifeArenaPlugin.INT_FORMAT.format(exp) + " XP&2!");
       StrifePlugin.getInstance().getExperienceManager().addExperience(player, exp, false);
     }
     purgeLoot(player);
+    player.playSound(location, Sound.BLOCK_CHEST_OPEN, 2, 1F);
+    player.playSound(location, Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, 1, 1F);
+    FireworkUtil.spawnFirework(location, Type.BALL, Color.WHITE, Color.BLUE, false, true);
+    FireworkUtil.spawnFirework(location, Type.BALL, Color.BLUE, Color.GREEN, false, true);
+    FireworkUtil.spawnFirework(location, Type.BALL, Color.GREEN, Color.WHITE, false, true);
+    location.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, location, 35, 1D, 1D, 1D, 0D);
   }
 }
