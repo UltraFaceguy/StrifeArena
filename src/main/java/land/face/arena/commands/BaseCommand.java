@@ -5,7 +5,6 @@ import static com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils.send
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.UUID;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.data.Arena;
 import land.face.arena.data.ArenaSpawn;
@@ -109,9 +108,20 @@ public class BaseCommand {
       return;
     }
     sendMessage(sender, "Records for " + arenaId);
-    for (UUID uuid : arena.getRecords().keySet()) {
-      sendMessage(sender, uuid + " - " + arena.getRecords().get(uuid).getHighestWave());
+    for (int i = 0; i < 10; i++) {
+      sendMessage(sender, plugin.getRecordManager().getRecord(arenaId, i));
     }
+  }
+
+  @Command(identifier = "arena records clear", permissions = "arenas.reconds")
+  public void clearRecordsCommand(Player sender, @Arg(name = "arenaId") String arenaId) {
+    Arena arena = plugin.getArenaManager().getArena(arenaId);
+    if (arena == null) {
+      sendMessage(sender, "&eNo arena named " + arenaId + " found!");
+      return;
+    }
+    arena.getRecords().clear();
+    sendMessage(sender, "cleared records for  " + arenaId);
   }
 
   @Command(identifier = "arena instances", permissions = "arenas.instances")

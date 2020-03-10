@@ -46,9 +46,9 @@ public class WaveRunner extends BukkitRunnable {
   private int tasksExecuted = 0;
   private List<LivingEntity> summons = new CopyOnWriteArrayList<>();
 
-  public WaveRunner(ArenaInstance instance, ArenaWave wave, BasicLocation location) {
+  public WaveRunner(ArenaInstance instance, ArenaWave wave, Location location) {
     this.instance = instance;
-    this.location = location.asLocation();
+    this.location = location;
     this.wave = wave;
   }
 

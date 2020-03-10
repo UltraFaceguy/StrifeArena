@@ -6,6 +6,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 public class ArenaExitListener implements Listener {
 
@@ -28,6 +29,13 @@ public class ArenaExitListener implements Listener {
   @EventHandler
   public void onPlayerDeath(PlayerKickEvent event) {
     plugin.getArenaManager().exitArena(event.getPlayer(), true);
+  }
+
+  @EventHandler
+  public void onPlayerTeleport(PlayerTeleportEvent event) {
+    if (event.getTo().getWorld() != event.getFrom().getWorld()) {
+      plugin.getArenaManager().exitArena(event.getPlayer(), false);
+    }
   }
 }
 
