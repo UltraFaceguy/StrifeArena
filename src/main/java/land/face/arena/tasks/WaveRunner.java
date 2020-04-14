@@ -92,7 +92,7 @@ public class WaveRunner extends BukkitRunnable {
     index++;
   }
 
-  private void clearSummons() {
+  public void clearSummons() {
     for (LivingEntity le : summons) {
       if (le == null || !le.isValid()) {
         summons.remove(le);

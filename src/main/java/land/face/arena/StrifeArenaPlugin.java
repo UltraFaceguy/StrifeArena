@@ -55,7 +55,7 @@ public class StrifeArenaPlugin extends JavaPlugin {
 
     settings = MasterConfiguration.loadFromFiles(configYAML);
 
-    arenaManager = new ArenaManager();
+    arenaManager = new ArenaManager(this);
     lootManager = new LootManager();
     recordManager = new RecordManager(this);
 

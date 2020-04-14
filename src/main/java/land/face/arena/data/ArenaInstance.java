@@ -3,7 +3,6 @@ package land.face.arena.data;
 import com.tealcube.minecraft.bukkit.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
 import java.util.ArrayList;
-import java.util.HashMap;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.tasks.ArenaKickRunner;
 import land.face.arena.tasks.WaveRunner;
@@ -22,7 +21,7 @@ public class ArenaInstance {
   private final Location location;
   private final Player player;
   private int wave = 0;
-  private long startTime = System.currentTimeMillis();
+  private long startTime;
 
   private WaveRunner waveRunner;
   private WaveStartRunner waveStartRunner;
@@ -33,6 +32,7 @@ public class ArenaInstance {
     this.player = player;
     this.instanceId = instanceId;
     this.location = arena.getInstances().get(instanceId).asLocation();
+    this.startTime = System.currentTimeMillis();
   }
 
   public void beginNextWave() {
@@ -78,7 +78,9 @@ public class ArenaInstance {
       doArenaEnd(player);
       return;
     }
-    bumpRecord(player, -1);
+
+    bumpRecord(player, wave, -1);
+
     Location loc = arena.getInstances().get(instanceId).asLocation();
     loc.getBlock().setType(Material.CHEST);
     loc.getBlock()
@@ -95,7 +97,10 @@ public class ArenaInstance {
       waveStartRunner.cancel();
       waveStartRunner = null;
     }
-    bumpRecord(player, System.currentTimeMillis() - startTime);
+
+    long time = wave == arena.getWaves().size() ? System.currentTimeMillis() - startTime : -1;
+    bumpRecord(player, wave, time);
+
     location.getBlock().setType(Material.ENDER_CHEST);
     StrifeArenaPlugin.getInstance().getLootManager().explodeLoot(player, location);
     if (arena.getWaves().size() != wave) {
@@ -114,6 +119,7 @@ public class ArenaInstance {
 
   public void cancelTimers() {
     if (waveRunner != null && !waveRunner.isCancelled()) {
+      waveRunner.clearSummons();
       waveRunner.cancel();
     }
     if (waveStartRunner != null && !waveStartRunner.isCancelled()) {
@@ -136,13 +142,11 @@ public class ArenaInstance {
     return player;
   }
 
-  private void bumpRecord(Player player, long time) {
-    if (arena.getRecords() == null) {
-      arena.setRecords(new HashMap<>());
-    }
+  private void bumpRecord(Player player, int wave, long time) {
     Record record = arena.getRecords().get(player.getUniqueId());
     if (record == null) {
       record = new Record();
+      record.setShortestTime(-1);
       arena.getRecords().put(player.getUniqueId(), record);
     }
     Record.bumpRecord(player, record, wave, time);

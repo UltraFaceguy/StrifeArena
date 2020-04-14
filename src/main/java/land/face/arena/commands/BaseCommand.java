@@ -2,9 +2,13 @@ package land.face.arena.commands;
 
 import static com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils.sendMessage;
 
+import com.tealcube.minecraft.bukkit.shade.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.UUID;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.data.Arena;
 import land.face.arena.data.ArenaSpawn;
@@ -12,6 +16,7 @@ import land.face.arena.data.ArenaWave;
 import land.face.arena.data.BasicLocation;
 import land.face.arena.data.LootReward;
 import land.face.arena.data.LootReward.RewardType;
+import land.face.arena.data.Record;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -21,6 +26,7 @@ import se.ranzdo.bukkit.methodcommand.Command;
 public class BaseCommand {
 
   private StrifeArenaPlugin plugin;
+  private Gson gson = new Gson();
 
   public BaseCommand(StrifeArenaPlugin plugin) {
     this.plugin = plugin;
@@ -44,6 +50,7 @@ public class BaseCommand {
     }
 
     Arena arena = new Arena(id);
+    arena.setRecords(new HashMap<>());
     arena.setArenaLevel(1);
     arena.setArenaLevelPerWave(0);
     arena.setMinExpPerWave(0);
@@ -77,7 +84,8 @@ public class BaseCommand {
       sendMessage(sender, "&eArena " + id + " does not exist!");
       return;
     }
-    plugin.getArenaManager().getArena(id).setExitLocation(BasicLocation.fromLocation(sender.getLocation()));
+    plugin.getArenaManager().getArena(id)
+        .setExitLocation(BasicLocation.fromLocation(sender.getLocation()));
     sendMessage(sender, "&aexit location updated");
   }
 
@@ -100,7 +108,7 @@ public class BaseCommand {
     sendMessage(sender, "&aAdded new arena location!");
   }
 
-  @Command(identifier = "arena records", permissions = "arenas.reconds")
+  @Command(identifier = "arena records list", permissions = "arenas.reconds")
   public void recordsCommand(Player sender, @Arg(name = "arenaId") String arenaId) {
     Arena arena = plugin.getArenaManager().getArena(arenaId);
     if (arena == null) {
@@ -122,6 +130,23 @@ public class BaseCommand {
     }
     arena.getRecords().clear();
     sendMessage(sender, "cleared records for  " + arenaId);
+  }
+
+  @Command(identifier = "arena records remove", permissions = "arenas.reconds")
+  public void removeRecordCommand(Player sender, @Arg(name = "arenaId") String arenaId,
+      @Arg(name = "playerName") String name) {
+    Arena arena = plugin.getArenaManager().getArena(arenaId);
+    if (arena == null) {
+      sendMessage(sender, "&eNo arena named " + arenaId + " found!");
+      return;
+    }
+    for (Entry<UUID, Record> entry : new HashMap<>(arena.getRecords()).entrySet()) {
+      if (name.equals(entry.getValue().getUsername())) {
+        arena.getRecords().remove(entry.getKey());
+        break;
+      }
+    }
+    sendMessage(sender, "Removed record for " + name + " in arena " + arenaId);
   }
 
   @Command(identifier = "arena instances", permissions = "arenas.instances")
@@ -162,7 +187,8 @@ public class BaseCommand {
   public void setRewardsCommand(Player sender, @Arg(name = "arenaId") String arenaId,
       @Arg(name = "minExpPerWave") double minXp, @Arg(name = "maxXpPerWave") double maxXp,
       @Arg(name = "expExponent") double expExp, @Arg(name = "minMoneyPerWave") double minMoney,
-      @Arg(name = "maxMoneyPerWave") double maxMoney, @Arg(name = "moneyExponent") double moneyExp) {
+      @Arg(name = "maxMoneyPerWave") double maxMoney,
+      @Arg(name = "moneyExponent") double moneyExp) {
     Arena arena = plugin.getArenaManager().getArena(arenaId);
     if (arena == null) {
       sendMessage(sender, "&eNo arena named " + arenaId + " found!");
@@ -233,7 +259,8 @@ public class BaseCommand {
     sendMessage(sender, "LootReward List for wave " + wave);
     int index = 0;
     for (LootReward lootReward : arena.getWaves().get(wave - 1).getLootRewards()) {
-      sendMessage(sender, index + " - " + lootReward.getType() + " - " + lootReward.getDataString());
+      sendMessage(sender,
+          index + " - " + lootReward.getType() + " - " + lootReward.getDataString());
       index++;
     }
   }
@@ -268,7 +295,8 @@ public class BaseCommand {
   }
 
   @Command(identifier = "arena removewave", permissions = "arenas.wave")
-  public void removeWaveCommand(Player sender, @Arg(name = "arenaId") String arenaId, @Arg(name = "waveNumber") int wave) {
+  public void removeWaveCommand(Player sender, @Arg(name = "arenaId") String arenaId,
+      @Arg(name = "waveNumber") int wave) {
     Arena arena = plugin.getArenaManager().getArena(arenaId);
     if (arena == null) {
       sendMessage(sender, "&eNo arena named " + arenaId + " found!");
@@ -290,7 +318,8 @@ public class BaseCommand {
   }
 
   @Command(identifier = "arena clearwave", permissions = "arenas.wave")
-  public void clearWaveCommand(Player sender, @Arg(name = "arenaId") String arenaId, @Arg(name = "waveNumber") int wave) {
+  public void clearWaveCommand(Player sender, @Arg(name = "arenaId") String arenaId,
+      @Arg(name = "waveNumber") int wave) {
     Arena arena = plugin.getArenaManager().getArena(arenaId);
     if (arena == null) {
       sendMessage(sender, "&eNo arena named " + arenaId + " found!");
@@ -341,11 +370,11 @@ public class BaseCommand {
     sendMessage(sender, "&aSet exp and money bonus on wave " + wave);
   }
 
-  @Command(identifier = "arena addspawn", permissions = "arenas.spawn")
+  @Command(identifier = "arena spawns add", permissions = "arenas.spawn")
   public void addSpawn(Player sender, @Arg(name = "arenaId") String arenaId,
-      @Arg(name = "waveNumber") int wave, @Arg(name = "amount") int amount,
-      @Arg(name = "instanceId") String instanceId, @Arg(name = "second") int second,
-      @Arg(name = "uniqueId") String uniqueId) {
+      @Arg(name = "instanceId") String instanceId, @Arg(name = "waveNumber") int wave,
+      @Arg(name = "time") int second, @Arg(name = "uniqueId") String uniqueId,
+      @Arg(name = "amount") int amount) {
     Arena arena = plugin.getArenaManager().getArena(arenaId);
     if (arena == null) {
       sendMessage(sender, "&eNo arena named " + arenaId + " found!");
@@ -371,5 +400,44 @@ public class BaseCommand {
 
     arena.getWaves().get(wave - 1).getArenaTask().get(second).add(spawn);
     sendMessage(sender, "&aAdded spawn!");
+  }
+
+  @Command(identifier = "arena spawns remove", permissions = "arenas.spawn")
+  public void addSpawn(Player sender, @Arg(name = "arenaId") String arenaId,
+      @Arg(name = "waveNumber") int wave) {
+    Arena arena = plugin.getArenaManager().getArena(arenaId);
+    if (arena == null) {
+      sendMessage(sender, "&eNo arena named " + arenaId + " found!");
+      return;
+    }
+    if (wave > arena.getWaves().size()) {
+      sendMessage(sender,
+          "&eArena " + arenaId + " has only " + arena.getWaves().size() + " waves!");
+      return;
+    }
+    arena.getWaves().get(wave - 1).getArenaTask().clear();
+
+    sendMessage(sender, "&acleared spawns on wave " + wave);
+  }
+
+  @Command(identifier = "arena spawns list", permissions = "arenas.spawn")
+  public void listSpawns(Player sender, @Arg(name = "arenaId") String arenaId,
+      @Arg(name = "waveNumber") int wave) {
+    Arena arena = plugin.getArenaManager().getArena(arenaId);
+    if (arena == null) {
+      sendMessage(sender, "&eNo arena named " + arenaId + " found!");
+      return;
+    }
+    if (wave > arena.getWaves().size()) {
+      sendMessage(sender,
+          "&eArena " + arenaId + " has only " + arena.getWaves().size() + " waves!");
+      return;
+    }
+    for (Entry<Integer, Set<ArenaSpawn>> entry : arena.getWaves().get(wave - 1).getArenaTask()
+        .entrySet()) {
+      for (ArenaSpawn spawn : entry.getValue()) {
+        sendMessage(sender, "S:" + entry.getKey() + " - " + gson.toJson(spawn));
+      }
+    }
   }
 }

@@ -41,17 +41,20 @@ public class Record implements Comparable<Record> {
     this.shortestTime = shortestTime;
   }
 
-  public static void bumpRecord(Player player, Record record, int wave, long time) {
-    record.setUsername(player.getName());
-    if (time == -1) {
-      record.setHighestWave(Math.max(record.getHighestWave(), wave));
-      return;
+  public static boolean bumpRecord(Player player, Record record, int newHighestWave, long newTime) {
+    record.username = player.getName();
+    int oldHighestWave = record.highestWave;
+    record.highestWave = Math.max(oldHighestWave, newHighestWave);
+    if (newTime == -1) {
+      return newHighestWave > oldHighestWave;
     }
-    if (record.getShortestTime() == 0) {
-      record.setShortestTime(time);
-      return;
+    long oldShortestTime = record.shortestTime;
+    if (oldShortestTime == -1) {
+      record.shortestTime = newTime;
+      return true;
     }
-    record.setShortestTime(Math.min(record.getShortestTime(), time));
+    record.shortestTime = Math.min(record.shortestTime, newTime);
+    return newTime < oldShortestTime;
   }
 
 }

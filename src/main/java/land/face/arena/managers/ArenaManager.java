@@ -27,11 +27,17 @@ import org.bukkit.entity.Player;
 
 public class ArenaManager {
 
+  private StrifeArenaPlugin plugin;
+
   private Map<String, Arena> arenas = new HashMap<>();
   private Map<String, List<ArenaInstance>> runningArenas = new HashMap<>();
   private Map<UUID, ArenaInstance> playerArenaMap = new HashMap<>();
 
   private Gson gson = new Gson();
+
+  public ArenaManager(StrifeArenaPlugin plugin) {
+    this.plugin = plugin;
+  }
 
   public void joinArena(Player player, String arenaId) {
     if (!arenas.containsKey(arenaId)) {
@@ -59,6 +65,7 @@ public class ArenaManager {
     runningArenas.get(arenaId).add(arenaInstance);
     player.teleport(arena.getInstances().get(instance).asLocation());
     playerArenaMap.put(player.getUniqueId(), arenaInstance);
+    plugin.getLootManager().initializeLoot(player);
     arenaInstance.beginNextWave();
   }
 
@@ -74,7 +81,7 @@ public class ArenaManager {
     if (!playerArenaMap.containsKey(player.getUniqueId())) {
       return;
     }
-    StrifeArenaPlugin.getInstance().getLootManager().purgeLoot(player);
+    plugin.getLootManager().purgeLoot(player);
     ArenaInstance arenaInstance = playerArenaMap.get(player.getUniqueId());
     if (arenaInstance == null) {
       return;
@@ -143,8 +150,7 @@ public class ArenaManager {
   }
 
   public void saveArenas() {
-    try (FileWriter writer = new FileWriter(
-        StrifeArenaPlugin.getInstance().getDataFolder() + "/arenas.json")) {
+    try (FileWriter writer = new FileWriter(plugin.getDataFolder() + "/arenas.json")) {
       gson.toJson(arenas.values(), writer);
     } catch (IOException e) {
       e.printStackTrace();
@@ -152,8 +158,7 @@ public class ArenaManager {
   }
 
   public void loadArenas() {
-    try (FileReader reader = new FileReader(
-        StrifeArenaPlugin.getInstance().getDataFolder() + "/arenas.json")) {
+    try (FileReader reader = new FileReader(plugin.getDataFolder() + "/arenas.json")) {
       JsonArray array = gson.fromJson(reader, JsonArray.class);
       for (JsonElement e : array) {
         Arena arena = gson.fromJson(e, Arena.class);
