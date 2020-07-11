@@ -21,6 +21,7 @@ import land.face.arena.data.Record;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -44,7 +45,7 @@ public class ArenaManager {
       Bukkit.getLogger().warning("Tried to add player not non-existing arena " + arenaId);
       return;
     }
-    if (playerArenaMap.containsKey(player.getUniqueId())) {
+    if (isInArena(player)) {
       MessageUtils.sendMessage(player, "&cYou are already in an arena...");
       Bukkit.getLogger()
           .warning("Tried to start arena for player already in one! " + player.getDisplayName());
@@ -77,8 +78,12 @@ public class ArenaManager {
     playerArenaMap.get(player.getUniqueId()).doArenaEnd(player);
   }
 
+  public boolean isInArena(Player player) {
+    return playerArenaMap.containsKey(player.getUniqueId());
+  }
+
   public void exitArena(Player player, boolean teleportToExitLocation) {
-    if (!playerArenaMap.containsKey(player.getUniqueId())) {
+    if (!isInArena(player)) {
       return;
     }
     plugin.getLootManager().purgeLoot(player);
@@ -89,9 +94,9 @@ public class ArenaManager {
 
     Location loc = arenaInstance.getArena().getInstances().get(arenaInstance.getInstanceId())
         .asLocation();
-    Collection<Entity> entities = loc.getNearbyEntities(40, 40, 40);
+    Collection<Entity> entities = loc.getNearbyEntities(50, 50, 50);
     for (Entity entity : entities) {
-      if (entity instanceof Item) {
+      if (!(entity instanceof Player || entity instanceof ArmorStand)) {
         entity.remove();
       }
     }

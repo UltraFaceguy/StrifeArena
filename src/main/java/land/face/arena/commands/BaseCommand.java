@@ -2,6 +2,7 @@ package land.face.arena.commands;
 
 import static com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils.sendMessage;
 
+import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
 import com.tealcube.minecraft.bukkit.shade.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.data.Arena;
+import land.face.arena.data.ArenaInstance;
 import land.face.arena.data.ArenaSpawn;
 import land.face.arena.data.ArenaWave;
 import land.face.arena.data.BasicLocation;
@@ -40,6 +42,16 @@ public class BaseCommand {
       return;
     }
     plugin.getArenaManager().joinArena(player, id);
+  }
+
+  @Command(identifier = "arena exit", permissions = "arenas.start")
+  public void startCommand(Player sender) {
+    ArenaInstance instance = plugin.getArenaManager().getInstance(sender);
+    if (instance == null || !instance.isArenaDone()) {
+      MessageUtils.sendMessage(sender, "&eThis command can only be run when you've finished an arena!");
+      return;
+    }
+    plugin.getArenaManager().exitArena(sender, true);
   }
 
   @Command(identifier = "arena create", permissions = "arenas.create", onlyPlayers = false)
@@ -78,6 +90,22 @@ public class BaseCommand {
     sendMessage(sender, "&aset");
   }
 
+  @Command(identifier = "arena setRequiredArena", permissions = "arenas.edit", onlyPlayers = false)
+  public void setLevelCommand(CommandSender sender, @Arg(name = "arena") String arena,
+      @Arg(name = "requiredArena") String requiredArena) {
+    if (plugin.getArenaManager().getArena(arena) == null) {
+      sendMessage(sender, "&eArena " + arena + " doesn't exist!");
+      return;
+    }
+    if (plugin.getArenaManager().getArena(requiredArena) == null) {
+      sendMessage(sender, "&eArena " + requiredArena + " doesn't exist!");
+      return;
+    }
+
+    plugin.getArenaManager().getArena(arena).setRequiredArena(requiredArena);
+    sendMessage(sender, "&aset!!");
+  }
+
   @Command(identifier = "arena setexit", permissions = "arenas.edit")
   public void addExist(Player sender, @Arg(name = "id") String id) {
     if (plugin.getArenaManager().getArena(id) == null) {
@@ -89,7 +117,7 @@ public class BaseCommand {
     sendMessage(sender, "&aexit location updated");
   }
 
-  @Command(identifier = "arena addinstance", permissions = "arenas.instances")
+  @Command(identifier = "arena instance add", permissions = "arenas.instances")
   public void menuCommand(Player sender, @Arg(name = "arenaId") String arenaId,
       @Arg(name = "instanceId") String instanceId) {
     Arena arena = plugin.getArenaManager().getArena(arenaId);
@@ -106,6 +134,25 @@ public class BaseCommand {
     }
     arena.getInstances().put(instanceId, BasicLocation.fromLocation(sender.getLocation()));
     sendMessage(sender, "&aAdded new arena location!");
+  }
+
+  @Command(identifier = "arena instance remove", permissions = "arenas.instances")
+  public void removeInstCommand(Player sender, @Arg(name = "arenaId") String arenaId,
+      @Arg(name = "instanceId") String instanceId) {
+    Arena arena = plugin.getArenaManager().getArena(arenaId);
+    if (arena == null) {
+      sendMessage(sender, "&eNo arena named " + arenaId + " found!");
+      return;
+    }
+    if (arena.getInstances() == null) {
+      arena.setInstances(new HashMap<>());
+    }
+    if (arena.getInstances().get(instanceId) == null) {
+      sendMessage(sender, "&eInstance with " + instanceId + " does not exist");
+      return;
+    }
+    arena.getInstances().remove(instanceId);
+    sendMessage(sender, "&aRemoved arena instance!");
   }
 
   @Command(identifier = "arena records list", permissions = "arenas.reconds")
@@ -149,7 +196,7 @@ public class BaseCommand {
     sendMessage(sender, "Removed record for " + name + " in arena " + arenaId);
   }
 
-  @Command(identifier = "arena instances", permissions = "arenas.instances")
+  @Command(identifier = "arena instance list", permissions = "arenas.instances")
   public void menuCommand(Player sender, @Arg(name = "arenaId") String arenaId) {
     Arena arena = plugin.getArenaManager().getArena(arenaId);
     if (arena == null) {
@@ -204,6 +251,57 @@ public class BaseCommand {
   }
 
   @Command(identifier = "arena addItemReward", permissions = "arenas.wave")
+  public void setBaseRewardsCommand(Player sender, @Arg(name = "arenaId") String arenaId,
+      @Arg(name = "rewardType") String type, @Arg(name = "amount") int amount,
+      @Arg(name = "chance") double chance, @Arg(name = "extraDataOne") String data1,
+      @Arg(name = "extraDataTwo") String data2) {
+
+    Arena arena = plugin.getArenaManager().getArena(arenaId);
+    if (arena == null) {
+      sendMessage(sender, "&eNo arena named " + arenaId + " found!");
+      return;
+    }
+
+    LootReward lootReward = new LootReward();
+
+    lootReward.setType(RewardType.valueOf(type.toUpperCase()));
+    lootReward.setAmount(amount);
+    lootReward.setProbability(chance);
+    lootReward.setDataString(data1);
+    lootReward.setDataStringTwo(data2);
+
+    if (arena.getLootRewards() == null) {
+      arena.setLootRewards(new ArrayList<>());
+    }
+
+    arena.getLootRewards().add(lootReward);
+
+    sendMessage(sender, "Added reward to arena " + arenaId);
+  }
+
+  @Command(identifier = "arena listItemReward", permissions = "arenas.wave")
+  public void listBaseRewardCommand(Player sender, @Arg(name = "arenaId") String arenaId) {
+
+    Arena arena = plugin.getArenaManager().getArena(arenaId);
+    if (arena == null) {
+      sendMessage(sender, "&eNo arena named " + arenaId + " found!");
+      return;
+    }
+
+    if (arena.getLootRewards() == null) {
+      arena.setLootRewards(new ArrayList<>());
+    }
+
+    sendMessage(sender, "LootReward List for arena " + arenaId);
+    int index = 0;
+    for (LootReward lootReward : arena.getLootRewards()) {
+      sendMessage(sender,
+          index + " - " + lootReward.getType() + " - " + lootReward.getDataString());
+      index++;
+    }
+  }
+
+  @Command(identifier = "arena wave addItemReward", permissions = "arenas.wave")
   public void setRewardsCommand(Player sender, @Arg(name = "arenaId") String arenaId,
       @Arg(name = "waveNumber") int wave, @Arg(name = "rewardType") String type,
       @Arg(name = "amount") int amount, @Arg(name = "chance") double chance,
@@ -237,7 +335,7 @@ public class BaseCommand {
     sendMessage(sender, "Added reward to wave " + wave);
   }
 
-  @Command(identifier = "arena listItemReward", permissions = "arenas.wave")
+  @Command(identifier = "arena wave listItemReward", permissions = "arenas.wave")
   public void setRewardsCommand(Player sender, @Arg(name = "arenaId") String arenaId,
       @Arg(name = "waveNumber") int wave) {
 

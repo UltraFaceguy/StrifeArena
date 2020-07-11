@@ -41,9 +41,11 @@ public class StrifeArenaPlugin extends JavaPlugin {
     return instance;
   }
 
-  public void onEnable() {
+  public StrifeArenaPlugin() {
     instance = this;
+  }
 
+  public void onEnable() {
     List<VersionedSmartYamlConfiguration> configurations = new ArrayList<>();
     configurations.add(configYAML = defaultSettingsLoad("config.yml"));
 

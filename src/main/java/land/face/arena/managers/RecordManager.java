@@ -13,6 +13,7 @@ import java.util.UUID;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.data.Arena;
 import land.face.arena.data.Record;
+import org.bukkit.entity.Player;
 
 public class RecordManager {
 
@@ -26,6 +27,18 @@ public class RecordManager {
 
   public RecordManager(StrifeArenaPlugin plugin) {
     this.plugin = plugin;
+  }
+
+  public boolean hasCompleted(Player player, String arenaId) {
+    Arena arena = plugin.getArenaManager().getArena(arenaId);
+    if (arena == null) {
+      return false;
+    }
+    Record record = arena.getRecords().get(player.getUniqueId());
+    if (record == null) {
+      return false;
+    }
+    return record.getShortestTime() > 0;
   }
 
   public String getRecord(String arenaId, int position) {

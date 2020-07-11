@@ -1,8 +1,10 @@
 package land.face.arena.data;
 
 import com.tealcube.minecraft.bukkit.TextUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
 import java.util.ArrayList;
+import java.util.List;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.tasks.ArenaKickRunner;
 import land.face.arena.tasks.WaveRunner;
@@ -61,7 +63,12 @@ public class ArenaInstance {
     if (completedWave.getLootRewards() == null) {
       completedWave.setLootRewards(new ArrayList<>());
     }
-    for (LootReward reward : completedWave.getLootRewards()) {
+    if (arena.getLootRewards() == null) {
+      arena.setLootRewards(new ArrayList<>());
+    }
+    List<LootReward> rewards = new ArrayList<>(arena.getLootRewards());
+    rewards.addAll(completedWave.getLootRewards());
+    for (LootReward reward : rewards) {
       if (Math.random() > reward.getProbability()) {
         continue;
       }
@@ -83,8 +90,7 @@ public class ArenaInstance {
 
     Location loc = arena.getInstances().get(instanceId).asLocation();
     loc.getBlock().setType(Material.CHEST);
-    loc.getBlock()
-        .setMetadata("ARENA_CHEST", new FixedMetadataValue(StrifeArenaPlugin.getInstance(), true));
+    loc.getBlock().setMetadata("ARENA_CHEST", new FixedMetadataValue(StrifeArenaPlugin.getInstance(), true));
     TitleUtils.sendTitle(player, TextUtils.color("&cWAVE VANQUISHED!"),
         TextUtils.color("&eCompleted Wave &f" + wave + "&e!"));
     waveStartRunner = null;
@@ -112,9 +118,14 @@ public class ArenaInstance {
           TextUtils.color("&aCompleted all &f" + wave + " &awaves!"));
       player.playSound(location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1.5F);
     }
+    MessageUtils.sendMessage(player, "&aNice! You did it! Collect your loot then use &f/arena exit &ato leave!");
     arenaKickRunner = null;
     arenaKickRunner = new ArenaKickRunner(this);
     arenaKickRunner.runTaskTimer(StrifeArenaPlugin.getInstance(), 100L, 20L);
+  }
+
+  public boolean isArenaDone() {
+    return arenaKickRunner != null;
   }
 
   public void cancelTimers() {
