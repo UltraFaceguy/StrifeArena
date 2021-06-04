@@ -66,13 +66,13 @@
     <dependency>
       <groupId>io.pixeloutlaw</groupId>
       <artifactId>strife</artifactId>
-      <version>3.3.2</version>
+      <version>3.4.1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>io.pixeloutlaw</groupId>
       <artifactId>loot</artifactId>
-      <version>1.4.0</version>
+      <version>1.4.1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
