@@ -8,9 +8,11 @@ public class Arena {
 
   private final String id;
   private ArrayList<ArenaWave> waves;
+  private ArrayList<LootReward> lootRewards;
   private HashMap<String, BasicLocation> instances;
   private HashMap<UUID, Record> records;
   private BasicLocation exitLocation;
+  private String requiredArena;
   private double arenaLevel;
   private double arenaLevelPerWave;
   private double minMoneyPerWave;
@@ -36,6 +38,14 @@ public class Arena {
     this.waves = waves;
   }
 
+  public ArrayList<LootReward> getLootRewards() {
+    return lootRewards;
+  }
+
+  public void setLootRewards(ArrayList<LootReward> lootRewards) {
+    this.lootRewards = lootRewards;
+  }
+
   public HashMap<String, BasicLocation> getInstances() {
     return instances;
   }
@@ -50,6 +60,14 @@ public class Arena {
 
   public void setRecords(HashMap<UUID, Record> records) {
     this.records = records;
+  }
+
+  public String getRequiredArena() {
+    return requiredArena;
+  }
+
+  public void setRequiredArena(String requiredArena) {
+    this.requiredArena = requiredArena;
   }
 
   public BasicLocation getExitLocation() {

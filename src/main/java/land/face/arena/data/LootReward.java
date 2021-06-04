@@ -1,9 +1,9 @@
 package land.face.arena.data;
 
 import info.faceland.loot.LootPlugin;
-import info.faceland.loot.api.tier.Tier;
 import info.faceland.loot.data.ItemRarity;
 import info.faceland.loot.items.prefabs.IdentityTome;
+import info.faceland.loot.tier.Tier;
 import org.bukkit.inventory.ItemStack;
 
 public class LootReward {

@@ -1,13 +1,13 @@
 package land.face.arena.managers;
 
+import com.tealcube.minecraft.bukkit.facecore.utilities.FireworkUtil;
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
+import info.faceland.mint.MintEconomy;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.strife.StrifePlugin;
-import land.face.strife.util.FireworkUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect.Type;
@@ -17,7 +17,6 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
@@ -25,28 +24,17 @@ import org.nunnerycode.mint.MintPlugin;
 
 public class LootManager {
 
-  private Map<UUID, Inventory> lootMap = new HashMap<>();
-  private Map<UUID, Double> cashMap = new HashMap<>();
-  private Map<UUID, Double> expMap = new HashMap<>();
+  private final Map<UUID, Inventory> lootMap = new HashMap<>();
+  private final Map<UUID, Double> cashMap = new HashMap<>();
+  private final Map<UUID, Double> expMap = new HashMap<>();
 
-  public void addExp(Player player, double amount) {
-    if (!expMap.containsKey(player.getUniqueId())) {
-      expMap.put(player.getUniqueId(), 0D);
-    }
-    expMap.put(player.getUniqueId(), expMap.get(player.getUniqueId()) + amount);
-  }
+  private MintEconomy mintEconomy = MintPlugin.getInstance().getEconomy();
 
-  public void addCash(Player player, double amount) {
-    if (!cashMap.containsKey(player.getUniqueId())) {
-      cashMap.put(player.getUniqueId(), 0D);
-    }
-    cashMap.put(player.getUniqueId(), cashMap.get(player.getUniqueId()) + amount);
+  public void initializeLoot(Player player) {
+    lootMap.put(player.getUniqueId(), Bukkit.createInventory(player, 54, "The Loots"));
   }
 
   public void addItem(Player player, ItemStack stack) {
-    if (!lootMap.containsKey(player.getUniqueId())) {
-      lootMap.put(player.getUniqueId(), Bukkit.createInventory(player, 54, "The Loots"));
-    }
     lootMap.get(player.getUniqueId()).addItem(stack);
   }
 
@@ -101,13 +89,11 @@ public class LootManager {
     double money = cashMap.getOrDefault(player.getUniqueId(), 0D);
     double exp = expMap.getOrDefault(player.getUniqueId(), 0D);
     if (money >= 1) {
-      MessageUtils.sendMessage(player,
-          "&eArena Reward: &f" + StrifeArenaPlugin.INT_FORMAT.format(money) + " Bits&e!");
-      MintPlugin.getInstance().getEconomy().depositPlayer(player, money);
+      MessageUtils.sendMessage(player, "&eArena Reward: &f" + StrifeArenaPlugin.INT_FORMAT.format(money) + " Bits&e!");
+      mintEconomy.depositPlayer(player, money);
     }
     if (exp >= 1) {
-      MessageUtils.sendMessage(player,
-          "&2Arena Reward: &f" + StrifeArenaPlugin.INT_FORMAT.format(exp) + " XP&2!");
+      MessageUtils.sendMessage(player, "&2Arena Reward: &f" + StrifeArenaPlugin.INT_FORMAT.format(exp) + " XP&2!");
       StrifePlugin.getInstance().getExperienceManager().addExperience(player, exp, false);
     }
     purgeLoot(player);

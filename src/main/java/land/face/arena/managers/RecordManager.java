@@ -1,33 +1,44 @@
 package land.face.arena.managers;
 
-import static com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.time.DurationFormatUtils.ISO_EXTENDED_FORMAT_PATTERN;
-
+import com.tealcube.minecraft.bukkit.TextUtils;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.time.DurationFormatUtils;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 import java.util.UUID;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.data.Arena;
 import land.face.arena.data.Record;
+import org.bukkit.entity.Player;
 
 public class RecordManager {
 
   private StrifeArenaPlugin plugin;
+  private static String COMPLETED_STRING = TextUtils.color(" &7- &aComplete! &f");
+  private static String WAVE_STRING = TextUtils.color(" &7- &eWave: &f");
+  private static String NO_RECORD = TextUtils.color("&7< No Record! >");
 
   private HashMap<String, Long> lastUpdatedMap = new HashMap<>();
   private HashMap<String, List<Record>> recordList = new HashMap<>();
 
   public RecordManager(StrifeArenaPlugin plugin) {
     this.plugin = plugin;
+  }
+
+  public boolean hasCompleted(Player player, String arenaId) {
+    Arena arena = plugin.getArenaManager().getArena(arenaId);
+    if (arena == null) {
+      return false;
+    }
+    Record record = arena.getRecords().get(player.getUniqueId());
+    if (record == null) {
+      return false;
+    }
+    return record.getShortestTime() > 0;
   }
 
   public String getRecord(String arenaId, int position) {
@@ -53,15 +64,34 @@ public class RecordManager {
     }
 
     if (position >= recordList.get(arenaId).size()) {
-      return "< Not Enough Data! >";
+      return NO_RECORD;
     }
 
     Record record = recordList.get(arenaId).get(position);
 
-    if (arena.getWaves().size() == record.getHighestWave() + 1) {
-      return record.getUsername() + " - Time: " + DurationFormatUtils.formatDuration(record.getShortestTime(), "m'min 's'sec'");
+    if (record.getHighestWave() == arena.getWaves().size()) {
+      return record.getUsername() + COMPLETED_STRING + DurationFormatUtils
+          .formatDuration(record.getShortestTime(), "m'm 's's'");
     }
-    return record.getUsername() + " - Wave: " + record.getHighestWave();
+    return record.getUsername() + WAVE_STRING + record.getHighestWave();
+  }
+
+  public String getRecord(String arenaId, UUID uuid) {
+    Arena arena = plugin.getArenaManager().getArena(arenaId);
+    if (arena == null) {
+      return "INVALID-ARENA-" + arenaId;
+    }
+
+    Record record = arena.getRecords().get(uuid);
+    if (record == null) {
+      return NO_RECORD;
+    }
+
+    if (record.getHighestWave() == arena.getWaves().size()) {
+      return record.getUsername() + COMPLETED_STRING + DurationFormatUtils
+          .formatDuration(record.getShortestTime(), "m'm 's's'");
+    }
+    return record.getUsername() + WAVE_STRING + record.getHighestWave();
   }
 
   private static LinkedHashMap<UUID, Record> sortByValues(Map<UUID, Record> unsortedMap) {
