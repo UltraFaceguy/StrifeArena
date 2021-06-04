@@ -1,12 +1,13 @@
 package land.face.arena.managers;
 
+import com.tealcube.minecraft.bukkit.facecore.utilities.FireworkUtil;
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
+import info.faceland.mint.MintEconomy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.strife.StrifePlugin;
-import land.face.strife.util.FireworkUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect.Type;
@@ -23,9 +24,11 @@ import org.nunnerycode.mint.MintPlugin;
 
 public class LootManager {
 
-  private Map<UUID, Inventory> lootMap = new HashMap<>();
-  private Map<UUID, Double> cashMap = new HashMap<>();
-  private Map<UUID, Double> expMap = new HashMap<>();
+  private final Map<UUID, Inventory> lootMap = new HashMap<>();
+  private final Map<UUID, Double> cashMap = new HashMap<>();
+  private final Map<UUID, Double> expMap = new HashMap<>();
+
+  private MintEconomy mintEconomy = MintPlugin.getInstance().getEconomy();
 
   public void initializeLoot(Player player) {
     lootMap.put(player.getUniqueId(), Bukkit.createInventory(player, 54, "The Loots"));
@@ -86,13 +89,11 @@ public class LootManager {
     double money = cashMap.getOrDefault(player.getUniqueId(), 0D);
     double exp = expMap.getOrDefault(player.getUniqueId(), 0D);
     if (money >= 1) {
-      MessageUtils.sendMessage(player,
-          "&eArena Reward: &f" + StrifeArenaPlugin.INT_FORMAT.format(money) + " Bits&e!");
-      MintPlugin.getInstance().getEconomy().depositPlayer(player, money);
+      MessageUtils.sendMessage(player, "&eArena Reward: &f" + StrifeArenaPlugin.INT_FORMAT.format(money) + " Bits&e!");
+      mintEconomy.depositPlayer(player, money);
     }
     if (exp >= 1) {
-      MessageUtils.sendMessage(player,
-          "&2Arena Reward: &f" + StrifeArenaPlugin.INT_FORMAT.format(exp) + " XP&2!");
+      MessageUtils.sendMessage(player, "&2Arena Reward: &f" + StrifeArenaPlugin.INT_FORMAT.format(exp) + " XP&2!");
       StrifePlugin.getInstance().getExperienceManager().addExperience(player, exp, false);
     }
     purgeLoot(player);

@@ -6,7 +6,12 @@ description: Make sum mob arenas
 depend:
   - Facecore
   - Strife
-api-version: 1.15
+api-version: 1.16
+
+permissions:
+  arenas.exit:
+    description: Exit arena when done
+    default: true
 
 commands:
   arena:

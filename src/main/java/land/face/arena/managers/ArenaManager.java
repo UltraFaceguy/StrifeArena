@@ -28,13 +28,13 @@ import org.bukkit.entity.Player;
 
 public class ArenaManager {
 
-  private StrifeArenaPlugin plugin;
+  private final StrifeArenaPlugin plugin;
 
-  private Map<String, Arena> arenas = new HashMap<>();
-  private Map<String, List<ArenaInstance>> runningArenas = new HashMap<>();
-  private Map<UUID, ArenaInstance> playerArenaMap = new HashMap<>();
+  private final Map<String, Arena> arenas = new HashMap<>();
+  private final Map<String, List<ArenaInstance>> runningArenas = new HashMap<>();
+  private final Map<UUID, ArenaInstance> playerArenaMap = new HashMap<>();
 
-  private Gson gson = new Gson();
+  private final Gson gson = new Gson();
 
   public ArenaManager(StrifeArenaPlugin plugin) {
     this.plugin = plugin;
@@ -107,7 +107,13 @@ public class ArenaManager {
     arenaInstance.cancelTimers();
     MessageUtils.sendMessage(player, "&eYour arena run has ended.");
     if (teleportToExitLocation) {
-      player.teleport(arenaInstance.getArena().getExitLocation().asLocation());
+      if (arenaInstance.getArena().getExitLocation() == null) {
+        Bukkit.getServer().broadcastMessage(
+            "HEY DING DONG, YOU FORGOT TO ADD AN ARENA EXIT FOR " + arenaInstance.getArena().getId()
+                + " NOW HOW IS " + player.getName() + "SUPPOSED TO GET OUT?");
+      } else {
+        player.teleport(arenaInstance.getArena().getExitLocation().asLocation());
+      }
     }
   }
 

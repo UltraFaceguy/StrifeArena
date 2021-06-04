@@ -76,6 +76,24 @@ public class RecordManager {
     return record.getUsername() + WAVE_STRING + record.getHighestWave();
   }
 
+  public String getRecord(String arenaId, UUID uuid) {
+    Arena arena = plugin.getArenaManager().getArena(arenaId);
+    if (arena == null) {
+      return "INVALID-ARENA-" + arenaId;
+    }
+
+    Record record = arena.getRecords().get(uuid);
+    if (record == null) {
+      return NO_RECORD;
+    }
+
+    if (record.getHighestWave() == arena.getWaves().size()) {
+      return record.getUsername() + COMPLETED_STRING + DurationFormatUtils
+          .formatDuration(record.getShortestTime(), "m'm 's's'");
+    }
+    return record.getUsername() + WAVE_STRING + record.getHighestWave();
+  }
+
   private static LinkedHashMap<UUID, Record> sortByValues(Map<UUID, Record> unsortedMap) {
     LinkedHashMap<UUID, Record> sortedMap = new LinkedHashMap<>();
 

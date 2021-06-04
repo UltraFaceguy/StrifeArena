@@ -44,7 +44,7 @@ public class BaseCommand {
     plugin.getArenaManager().joinArena(player, id);
   }
 
-  @Command(identifier = "arena exit", permissions = "arenas.start")
+  @Command(identifier = "arena exit", permissions = "arenas.exit")
   public void startCommand(Player sender) {
     ArenaInstance instance = plugin.getArenaManager().getInstance(sender);
     if (instance == null || !instance.isArenaDone()) {
