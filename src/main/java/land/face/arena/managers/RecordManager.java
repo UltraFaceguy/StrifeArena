@@ -13,6 +13,7 @@ import java.util.UUID;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.data.Arena;
 import land.face.arena.data.Record;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 public class RecordManager {
@@ -69,11 +70,7 @@ public class RecordManager {
 
     Record record = recordList.get(arenaId).get(position);
 
-    if (record.getHighestWave() == arena.getWaves().size()) {
-      return record.getUsername() + COMPLETED_STRING + DurationFormatUtils
-          .formatDuration(record.getShortestTime(), "m'm 's's'");
-    }
-    return record.getUsername() + WAVE_STRING + record.getHighestWave();
+    return formatRecordString(record, arena);
   }
 
   public String getRecord(String arenaId, UUID uuid) {
@@ -87,11 +84,17 @@ public class RecordManager {
       return NO_RECORD;
     }
 
+    return formatRecordString(record, arena);
+  }
+
+  private static String formatRecordString(Record record, Arena arena) {
     if (record.getHighestWave() == arena.getWaves().size()) {
-      return record.getUsername() + COMPLETED_STRING + DurationFormatUtils
-          .formatDuration(record.getShortestTime(), "m'm 's's'");
+      return ChatColor.WHITE + record.getUsername() + ChatColor.GRAY + " [" + ChatColor.GREEN
+          + DurationFormatUtils.formatDuration(record.getShortestTime(),
+          "m'm 's's'" + ChatColor.DARK_GREEN + "✔" + ChatColor.GRAY + "]");
     }
-    return record.getUsername() + WAVE_STRING + record.getHighestWave();
+    return ChatColor.WHITE + record.getUsername() + ChatColor.GRAY + " [" + ChatColor.YELLOW
+        + "Wave " + record.getHighestWave() + ChatColor.GRAY + "]";
   }
 
   private static LinkedHashMap<UUID, Record> sortByValues(Map<UUID, Record> unsortedMap) {
