@@ -1,6 +1,6 @@
 package land.face.arena.managers;
 
-import com.tealcube.minecraft.bukkit.TextUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.time.DurationFormatUtils;
 import java.util.ArrayList;
 import java.util.HashMap;

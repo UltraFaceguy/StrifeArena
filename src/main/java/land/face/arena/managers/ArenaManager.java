@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.data.Arena;
@@ -38,6 +39,10 @@ public class ArenaManager {
 
   public ArenaManager(StrifeArenaPlugin plugin) {
     this.plugin = plugin;
+  }
+
+  public Set<String> getArenaIds() {
+    return runningArenas.keySet();
   }
 
   public void joinArena(Player player, String arenaId) {

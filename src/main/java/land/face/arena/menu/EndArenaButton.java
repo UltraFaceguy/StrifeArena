@@ -18,7 +18,7 @@
  */
 package land.face.arena.menu;
 
-import com.tealcube.minecraft.bukkit.TextUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +46,8 @@ public class EndArenaButton extends MenuItem {
     lore.add("&7Click here to end your");
     lore.add("&7arena run!");
     ItemStackExtensionsKt.setDisplayName(stack, TextUtils.color("&a&lCollect Loot And Leave!"));
-    ItemStackExtensionsKt.setLore(stack, TextUtils.color(lore));
-    ItemStackExtensionsKt.addItemFlags(stack, ItemFlag.HIDE_ATTRIBUTES);
+    TextUtils.setLore(stack, TextUtils.color(lore));
+    stack.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
     return stack;
   }
 

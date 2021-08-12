@@ -1,6 +1,7 @@
 package land.face.arena;
 
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
+import com.tealcube.minecraft.bukkit.shade.acf.PaperCommandManager;
 import io.pixeloutlaw.minecraft.spigot.config.MasterConfiguration;
 import io.pixeloutlaw.minecraft.spigot.config.VersionedConfiguration;
 import io.pixeloutlaw.minecraft.spigot.config.VersionedSmartYamlConfiguration;
@@ -8,7 +9,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-import land.face.arena.commands.BaseCommand;
+import land.face.arena.commands.ArenaCommand;
 import land.face.arena.data.ArenaInstance;
 import land.face.arena.listeners.ArenaChestListener;
 import land.face.arena.listeners.ArenaExitListener;
@@ -17,11 +18,11 @@ import land.face.arena.managers.ArenaManager;
 import land.face.arena.managers.LootManager;
 import land.face.arena.managers.RecordManager;
 import land.face.arena.menu.ArenaRewardsMenu;
+import land.face.strife.commands.InspectCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
-import se.ranzdo.bukkit.methodcommand.CommandHandler;
 
 public class StrifeArenaPlugin extends JavaPlugin {
 
@@ -37,8 +38,6 @@ public class StrifeArenaPlugin extends JavaPlugin {
 
   private MasterConfiguration settings;
   private VersionedSmartYamlConfiguration configYAML;
-
-  private CommandHandler commandHandler;
 
   public static StrifeArenaPlugin getInstance() {
     return instance;
@@ -70,11 +69,13 @@ public class StrifeArenaPlugin extends JavaPlugin {
 
     rewardsMenu = new ArenaRewardsMenu();
 
-    commandHandler = new CommandHandler(this);
-    commandHandler.registerCommands(new BaseCommand(this));
-
     arenaManager.loadArenas();
     arenaManager.updateRecordUsernames();
+
+    PaperCommandManager commandManager = new PaperCommandManager(this);
+    commandManager.registerCommand(new ArenaCommand(this));
+    commandManager.getCommandCompletions()
+        .registerCompletion("arenas", c -> arenaManager.getArenaIds());
 
     Bukkit.getServer().getLogger().info("StrifeArena Enabled!");
   }

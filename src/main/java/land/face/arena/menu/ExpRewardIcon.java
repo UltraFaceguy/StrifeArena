@@ -18,7 +18,7 @@
  */
 package land.face.arena.menu;
 
-import com.tealcube.minecraft.bukkit.TextUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +31,8 @@ import org.bukkit.inventory.ItemStack;
 
 public class ExpRewardIcon extends MenuItem {
 
-  private String displayName = TextUtils.color("&2Experience Reward");
-  private String loreString = TextUtils.color("&a+&f{0} XP");
+  private final String displayName = TextUtils.color("&2Experience Reward");
+  private final String loreString = TextUtils.color("&a+&f{0} XP");
 
   ExpRewardIcon() {
     super("", new ItemStack(Material.EXPERIENCE_BOTTLE));
@@ -45,7 +45,7 @@ public class ExpRewardIcon extends MenuItem {
     lore.add(loreString.replace("{0}", StrifeArenaPlugin.INT_FORMAT
         .format(StrifeArenaPlugin.getInstance().getLootManager().getExp(player))));
     ItemStackExtensionsKt.setDisplayName(stack, displayName);
-    ItemStackExtensionsKt.setLore(stack, lore);
+    TextUtils.setLore(stack, lore);
     return stack;
   }
 

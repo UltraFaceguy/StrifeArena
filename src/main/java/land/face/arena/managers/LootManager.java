@@ -89,11 +89,11 @@ public class LootManager {
     double money = cashMap.getOrDefault(player.getUniqueId(), 0D);
     double exp = expMap.getOrDefault(player.getUniqueId(), 0D);
     if (money >= 1) {
-      MessageUtils.sendMessage(player, "&eArena Reward: &f" + StrifeArenaPlugin.INT_FORMAT.format(money) + " Bits&e!");
+      MessageUtils.sendMessage(player, "&6Arena Reward: &e+" + StrifeArenaPlugin.INT_FORMAT.format(money) + "◎");
       mintEconomy.depositPlayer(player, money);
     }
     if (exp >= 1) {
-      MessageUtils.sendMessage(player, "&2Arena Reward: &f" + StrifeArenaPlugin.INT_FORMAT.format(exp) + " XP&2!");
+      MessageUtils.sendMessage(player, "&2Arena Reward: &a+" + StrifeArenaPlugin.INT_FORMAT.format(exp) + " XP");
       StrifePlugin.getInstance().getExperienceManager().addExperience(player, exp, false);
     }
     purgeLoot(player);

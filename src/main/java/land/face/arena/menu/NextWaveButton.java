@@ -18,7 +18,7 @@
  */
 package land.face.arena.menu;
 
-import com.tealcube.minecraft.bukkit.TextUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,8 +47,8 @@ public class NextWaveButton extends MenuItem {
     lore.add("&7the next wave and earn");
     lore.add("&7even more rewards!");
     ItemStackExtensionsKt.setDisplayName(stack, TextUtils.color("&6&lStart Next Wave!"));
-    ItemStackExtensionsKt.setLore(stack, TextUtils.color(lore));
-    ItemStackExtensionsKt.addItemFlags(stack, ItemFlag.HIDE_ATTRIBUTES);
+    TextUtils.setLore(stack, TextUtils.color(lore));
+    stack.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
     return stack;
   }
 

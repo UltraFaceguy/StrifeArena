@@ -18,7 +18,7 @@
  */
 package land.face.arena.tasks;
 
-import com.tealcube.minecraft.bukkit.TextUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.data.ArenaInstance;

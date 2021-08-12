@@ -18,7 +18,7 @@
  */
 package land.face.arena.menu;
 
-import com.tealcube.minecraft.bukkit.TextUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +31,8 @@ import org.bukkit.inventory.ItemStack;
 
 public class CashRewardIcon extends MenuItem {
 
-  private String displayName = TextUtils.color("&6Money Reward");
-  private String loreString = TextUtils.color("&e+&f{0} Bits");
+  private final String displayName = TextUtils.color("&6Money Reward");
+  private final String loreString = TextUtils.color("&e+{0}◎");
 
   CashRewardIcon() {
     super("", new ItemStack(Material.GOLD_INGOT));
@@ -45,7 +45,7 @@ public class CashRewardIcon extends MenuItem {
     lore.add(loreString.replace("{0}", StrifeArenaPlugin.INT_FORMAT
         .format(StrifeArenaPlugin.getInstance().getLootManager().getCash(player))));
     ItemStackExtensionsKt.setDisplayName(stack, displayName);
-    ItemStackExtensionsKt.setLore(stack, lore);
+    TextUtils.setLore(stack, lore);
     return stack;
   }
 
