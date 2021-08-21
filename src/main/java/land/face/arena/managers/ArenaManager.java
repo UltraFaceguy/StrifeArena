@@ -42,7 +42,7 @@ public class ArenaManager {
   }
 
   public Set<String> getArenaIds() {
-    return runningArenas.keySet();
+    return arenas.keySet();
   }
 
   public void joinArena(Player player, String arenaId) {

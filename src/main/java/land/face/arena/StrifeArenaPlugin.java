@@ -37,7 +37,7 @@ public class StrifeArenaPlugin extends JavaPlugin {
   private ArenaRewardsMenu rewardsMenu;
 
   private MasterConfiguration settings;
-  private VersionedSmartYamlConfiguration configYAML;
+  private PaperCommandManager commandManager;
 
   public static StrifeArenaPlugin getInstance() {
     return instance;
@@ -49,6 +49,7 @@ public class StrifeArenaPlugin extends JavaPlugin {
 
   public void onEnable() {
     List<VersionedSmartYamlConfiguration> configurations = new ArrayList<>();
+    VersionedSmartYamlConfiguration configYAML;
     configurations.add(configYAML = defaultSettingsLoad("config.yml"));
 
     for (VersionedSmartYamlConfiguration config : configurations) {
@@ -72,7 +73,7 @@ public class StrifeArenaPlugin extends JavaPlugin {
     arenaManager.loadArenas();
     arenaManager.updateRecordUsernames();
 
-    PaperCommandManager commandManager = new PaperCommandManager(this);
+    commandManager = new PaperCommandManager(this);
     commandManager.registerCommand(new ArenaCommand(this));
     commandManager.getCommandCompletions()
         .registerCompletion("arenas", c -> arenaManager.getArenaIds());
@@ -81,6 +82,7 @@ public class StrifeArenaPlugin extends JavaPlugin {
   }
 
   public void onDisable() {
+    commandManager.unregisterCommands();
     for (Player p : Bukkit.getOnlinePlayers()) {
       ArenaInstance instance = arenaManager.getInstance(p);
       if (instance != null) {

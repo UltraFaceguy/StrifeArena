@@ -30,7 +30,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-@CommandAlias("arena|arenas")
+@CommandAlias("arena|arenas|sarena")
 public class ArenaCommand extends BaseCommand {
 
   private final StrifeArenaPlugin plugin;
@@ -52,19 +52,18 @@ public class ArenaCommand extends BaseCommand {
   }
 
   @Subcommand("exit|leave|quit")
-  @CommandPermission("arenas.exit")
-  public void exit(OnlinePlayer sender) {
-    ArenaInstance instance = plugin.getArenaManager().getInstance(sender.getPlayer());
+  public void exit(Player player) {
+    ArenaInstance instance = plugin.getArenaManager().getInstance(player);
     if (instance == null || !instance.isArenaDone()) {
-      MessageUtils.sendMessage(sender.getPlayer(), "&eThis command can only be run when you've finished an arena!");
+      MessageUtils.sendMessage(player, "&eThis command can only be run when you've finished an arena!");
       return;
     }
-    plugin.getArenaManager().exitArena(sender.getPlayer(), true);
+    plugin.getArenaManager().exitArena(player, true);
   }
 
   @Subcommand("create")
   @Syntax("<ArenaID>")
-  @CommandPermission("arena.create")
+  @CommandPermission("arenas.create")
   public void create(CommandSender sender, String id) {
     if (plugin.getArenaManager().getArena(id) != null) {
       sendMessage(sender, "&eArena " + id + " already exists!");
@@ -89,6 +88,17 @@ public class ArenaCommand extends BaseCommand {
   @Subcommand("edit")
   @CommandPermission("arenas.edit")
   public class EditCommand extends BaseCommand {
+
+    @Subcommand("exit-location")
+    @CommandCompletion("@arenas")
+    public void editExit(Player player, String id) {
+      if (plugin.getArenaManager().getArena(id) == null) {
+        sendMessage(player, "&eArena " + id + " does not exist!");
+        return;
+      }
+      plugin.getArenaManager().getArena(id).setExitLocation(BasicLocation.fromLocation(player.getLocation()));
+      sendMessage(player, "&aexit location updated");
+    }
 
     @Subcommand("level")
     @CommandCompletion("@arenas @range:1-100 @range:1-100")
@@ -120,40 +130,28 @@ public class ArenaCommand extends BaseCommand {
       sendMessage(sender, "&aset!!");
     }
 
-    @Subcommand("exit")
-    @CommandCompletion("@arenas")
-    public void editExit(Player sender, String id) {
-      if (plugin.getArenaManager().getArena(id) == null) {
-        sendMessage(sender, "&eArena " + id + " does not exist!");
-        return;
-      }
-      plugin.getArenaManager().getArena(id)
-          .setExitLocation(BasicLocation.fromLocation(sender.getLocation()));
-      sendMessage(sender, "&aexit location updated");
-    }
-
     @Subcommand("instance add")
     @CommandCompletion("@arenas")
-    public void menuCommand(Player sender, String arenaId, String instanceId) {
+    public void menuCommand(Player player, String arenaId, String instanceId) {
       Arena arena = plugin.getArenaManager().getArena(arenaId);
       if (arena == null) {
-        sendMessage(sender, "&eNo arena named " + arenaId + " found!");
+        sendMessage(player, "&eNo arena named " + arenaId + " found!");
         return;
       }
       if (arena.getInstances() == null) {
         arena.setInstances(new HashMap<>());
       }
       if (arena.getInstances().get(instanceId) != null) {
-        sendMessage(sender, "&eInstance with " + instanceId + " already exists!");
+        sendMessage(player, "&eInstance with " + instanceId + " already exists!");
         return;
       }
-      arena.getInstances().put(instanceId, BasicLocation.fromLocation(sender.getLocation()));
-      sendMessage(sender, "&aAdded new arena location!");
+      arena.getInstances().put(instanceId, BasicLocation.fromLocation(player.getLocation()));
+      sendMessage(player, "&aAdded new arena location!");
     }
 
     @Subcommand("instance remove")
     @CommandCompletion("@arenas")
-    public void removeInstCommand(Player sender, String arenaId, String instanceId) {
+    public void removeInstCommand(CommandSender sender, String arenaId, String instanceId) {
       Arena arena = plugin.getArenaManager().getArena(arenaId);
       if (arena == null) {
         sendMessage(sender, "&eNo arena named " + arenaId + " found!");
@@ -172,7 +170,7 @@ public class ArenaCommand extends BaseCommand {
 
     @Subcommand("instance list")
     @CommandCompletion("@arenas")
-    public void menuCommand(Player sender, String arenaId) {
+    public void menuCommand(CommandSender sender, String arenaId) {
       Arena arena = plugin.getArenaManager().getArena(arenaId);
       if (arena == null) {
         sendMessage(sender, "&eNo arena named " + arenaId + " found!");
@@ -187,7 +185,7 @@ public class ArenaCommand extends BaseCommand {
 
   @Subcommand("addItem")
   @CommandCompletion("@arenas")
-  public void setBaseRewardsCommand(Player sender, String arenaId, String type, int amount,
+  public void setBaseRewardsCommand(CommandSender sender, String arenaId, String type, int amount,
       double chance, String data1, String data2) {
 
     Arena arena = plugin.getArenaManager().getArena(arenaId);
@@ -215,7 +213,7 @@ public class ArenaCommand extends BaseCommand {
 
   @Subcommand("listItems")
   @CommandCompletion("@arenas")
-  public void listBaseRewardCommand(Player sender, String arenaId) {
+  public void listBaseRewardCommand(CommandSender sender, String arenaId) {
 
     Arena arena = plugin.getArenaManager().getArena(arenaId);
     if (arena == null) {
@@ -285,12 +283,12 @@ public class ArenaCommand extends BaseCommand {
   }
 
   @Subcommand("wave")
-  @CommandPermission("arenas.records")
+  @CommandPermission("arenas.wave")
   public class WaveCommand extends BaseCommand {
 
     @Subcommand("add")
     @CommandCompletion("@arenas")
-    public void addWaveCommand(Player sender, String arenaId) {
+    public void addWaveCommand(CommandSender sender, String arenaId) {
       Arena arena = plugin.getArenaManager().getArena(arenaId);
       if (arena == null) {
         sendMessage(sender, "&eNo arena named " + arenaId + " found!");
@@ -312,7 +310,7 @@ public class ArenaCommand extends BaseCommand {
 
     @Subcommand("rewards")
     @CommandCompletion("@arenas")
-    public void setRewardsCommand(Player sender, String arenaId, double minXp, double maxXp,
+    public void setRewardsCommand(CommandSender sender, String arenaId, double minXp, double maxXp,
         double expExp, double minMoney, double maxMoney, double moneyExp) {
       Arena arena = plugin.getArenaManager().getArena(arenaId);
       if (arena == null) {
@@ -330,7 +328,7 @@ public class ArenaCommand extends BaseCommand {
 
     @Subcommand("addItem")
     @CommandCompletion("@arenas")
-    public void setRewardsCommand(Player sender, String arenaId, int wave, String type, int amount,
+    public void setRewardsCommand(CommandSender sender, String arenaId, int wave, String type, int amount,
         double chance, String data1, String data2) {
 
       Arena arena = plugin.getArenaManager().getArena(arenaId);
@@ -363,7 +361,7 @@ public class ArenaCommand extends BaseCommand {
 
     @Subcommand("listItems")
     @CommandCompletion("@arenas")
-    public void setRewardsCommand(Player sender, String arenaId, int wave) {
+    public void setRewardsCommand(CommandSender sender, String arenaId, int wave) {
 
       Arena arena = plugin.getArenaManager().getArena(arenaId);
       if (arena == null) {
@@ -391,7 +389,7 @@ public class ArenaCommand extends BaseCommand {
 
     @Subcommand("removeItem")
     @CommandCompletion("@arenas")
-    public void setRewardsCommand(Player sender, String arenaId, int wave, int reward) {
+    public void setRewardsCommand(CommandSender sender, String arenaId, int wave, int reward) {
 
       Arena arena = plugin.getArenaManager().getArena(arenaId);
       if (arena == null) {
@@ -420,7 +418,7 @@ public class ArenaCommand extends BaseCommand {
 
     @Subcommand("remove")
     @CommandCompletion("@arenas")
-    public void removeWaveCommand(Player sender, String arenaId, int wave) {
+    public void removeWaveCommand(CommandSender sender, String arenaId, int wave) {
       Arena arena = plugin.getArenaManager().getArena(arenaId);
       if (arena == null) {
         sendMessage(sender, "&eNo arena named " + arenaId + " found!");
@@ -443,7 +441,7 @@ public class ArenaCommand extends BaseCommand {
 
     @Subcommand("clear")
     @CommandCompletion("@arenas")
-    public void clearWaveCommand(Player sender, String arenaId, int wave) {
+    public void clearWaveCommand(CommandSender sender, String arenaId, int wave) {
       Arena arena = plugin.getArenaManager().getArena(arenaId);
       if (arena == null) {
         sendMessage(sender, "&eNo arena named " + arenaId + " found!");
@@ -469,7 +467,7 @@ public class ArenaCommand extends BaseCommand {
 
     @Subcommand("rewards")
     @CommandCompletion("@arenas")
-    public void waveRewardsCommand(Player sender, String arenaId, int wave, double expBonus,
+    public void waveRewardsCommand(CommandSender sender, String arenaId, int wave, double expBonus,
         double moneyBonus) {
       Arena arena = plugin.getArenaManager().getArena(arenaId);
       if (arena == null) {
@@ -501,16 +499,15 @@ public class ArenaCommand extends BaseCommand {
 
     @Subcommand("add")
     @CommandCompletion("@arenas")
-    public void spawnsAdd(Player sender, String arenaId, String instanceId, int wave, int second,
+    public void spawnsAdd(Player player, String arenaId, String instanceId, int wave, int second,
         String uniqueId, int amount) {
       Arena arena = plugin.getArenaManager().getArena(arenaId);
       if (arena == null) {
-        sendMessage(sender, "&eNo arena named " + arenaId + " found!");
+        sendMessage(player, "&eNo arena named " + arenaId + " found!");
         return;
       }
       if (wave > arena.getWaves().size()) {
-        sendMessage(sender,
-            "&eArena " + arenaId + " has only " + arena.getWaves().size() + " waves!");
+        sendMessage(player, "&eArena " + arenaId + " has only " + arena.getWaves().size() + " waves!");
         return;
       }
       if (!arena.getWaves().get(wave - 1).getArenaTask().containsKey(second)) {
@@ -518,7 +515,7 @@ public class ArenaCommand extends BaseCommand {
       }
 
       BasicLocation loc = arena.getInstances().get(instanceId);
-      Vector offset = sender.getLocation().clone()
+      Vector offset = player.getLocation().clone()
           .subtract(new Vector(loc.getX(), loc.getY(), loc.getZ())).toVector();
 
       ArenaSpawn spawn = new ArenaSpawn();
@@ -527,12 +524,12 @@ public class ArenaCommand extends BaseCommand {
       spawn.setOffset(offset);
 
       arena.getWaves().get(wave - 1).getArenaTask().get(second).add(spawn);
-      sendMessage(sender, "&aAdded spawn!");
+      sendMessage(player, "&aAdded spawn!");
     }
 
     @Subcommand("remove")
     @CommandCompletion("@arenas")
-    public void spawnsRemove(Player sender, String arenaId, int wave) {
+    public void spawnsRemove(CommandSender sender, String arenaId, int wave) {
       Arena arena = plugin.getArenaManager().getArena(arenaId);
       if (arena == null) {
         sendMessage(sender, "&eNo arena named " + arenaId + " found!");
@@ -549,7 +546,7 @@ public class ArenaCommand extends BaseCommand {
 
     @Subcommand("list")
     @CommandCompletion("@arenas")
-    public void listSpawns(Player sender, String arenaId, int wave) {
+    public void listSpawns(CommandSender sender, String arenaId, int wave) {
       Arena arena = plugin.getArenaManager().getArena(arenaId);
       if (arena == null) {
         sendMessage(sender, "&eNo arena named " + arenaId + " found!");

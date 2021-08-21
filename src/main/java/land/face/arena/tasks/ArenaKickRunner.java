@@ -22,14 +22,16 @@ import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.data.ArenaInstance;
+import org.bukkit.ChatColor;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class ArenaKickRunner extends BukkitRunnable {
 
-  private ArenaInstance instance;
+  private final ArenaInstance instance;
   private int seconds = 60;
-  private String secondLeft = TextUtils.color("&eArena closing in &f{0}s");
-  private String exitArena = TextUtils.color("&eExiting Arena!");
+  private final String blank = " " + ChatColor.GRAY + " ";
+  private final String secondLeft = TextUtils.color("&eArena closing in &f{0}s");
+  private final String exitArena = TextUtils.color("&eExiting Arena!");
 
   public ArenaKickRunner(ArenaInstance instance) {
     this.instance = instance;
@@ -38,12 +40,12 @@ public class ArenaKickRunner extends BukkitRunnable {
   @Override
   public void run() {
     if (instance.getPlayer().isValid() && seconds > 0) {
-      TitleUtils.sendTitle(instance.getPlayer(), "", secondLeft.replace("{0}",
+      TitleUtils.sendTitle(instance.getPlayer(), blank, secondLeft.replace("{0}",
           String.valueOf(seconds)), 10, 1, 5);
       seconds--;
       return;
     }
-    TitleUtils.sendTitle(instance.getPlayer(), "", exitArena, 10, 1, 5);
+    TitleUtils.sendTitle(instance.getPlayer(), blank, exitArena, 20, 0, 5);
     StrifeArenaPlugin.getInstance().getArenaManager().exitArena(instance.getPlayer(), true);
     cancel();
   }

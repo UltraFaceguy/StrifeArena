@@ -1,20 +1,9 @@
 name: StrifeArena
-version: 1.0.0
+version: 1.2.0
 main: land.face.arena.StrifeArenaPlugin
 author: Faceguy
 description: Make sum mob arenas
+api-version: 1.17
 depend:
   - Facecore
   - Strife
-api-version: 1.16
-
-permissions:
-  arenas.exit:
-    description: Exit arena when done
-    default: true
-
-commands:
-  arena:
-    usage: /<command>
-    aliases: [arenaa]
-    description: arenaz
