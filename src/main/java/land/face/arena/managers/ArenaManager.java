@@ -18,11 +18,12 @@ import java.util.UUID;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.data.Arena;
 import land.face.arena.data.ArenaInstance;
+import land.face.arena.data.LootReward;
 import land.face.arena.data.Record;
+import lombok.Getter;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -36,6 +37,9 @@ public class ArenaManager {
   private final Map<UUID, ArenaInstance> playerArenaMap = new HashMap<>();
 
   private final Gson gson = new Gson();
+
+  @Getter
+  private final List<LootReward> baseRewards = new ArrayList<>();
 
   public ArenaManager(StrifeArenaPlugin plugin) {
     this.plugin = plugin;
@@ -97,11 +101,11 @@ public class ArenaManager {
       return;
     }
 
-    Location loc = arenaInstance.getArena().getInstances().get(arenaInstance.getInstanceId())
-        .asLocation();
+    Location loc = arenaInstance.getArena().getInstances()
+        .get(arenaInstance.getInstanceId()).asLocation();
     Collection<Entity> entities = loc.getNearbyEntities(50, 50, 50);
     for (Entity entity : entities) {
-      if (!(entity instanceof Player || entity instanceof ArmorStand)) {
+      if (entity instanceof Item) {
         entity.remove();
       }
     }
@@ -179,6 +183,16 @@ public class ArenaManager {
       for (JsonElement e : array) {
         Arena arena = gson.fromJson(e, Arena.class);
         arenas.put(arena.getId(), arena);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    try (FileReader reader = new FileReader(plugin.getDataFolder() + "/defaultRewards.json")) {
+      baseRewards.clear();
+      JsonArray array = gson.fromJson(reader, JsonArray.class);
+      for (JsonElement e : array) {
+        LootReward reward = gson.fromJson(e, LootReward.class);
+        baseRewards.add(reward);
       }
     } catch (IOException e) {
       e.printStackTrace();

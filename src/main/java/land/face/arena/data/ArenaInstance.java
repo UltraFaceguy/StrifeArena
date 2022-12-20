@@ -1,14 +1,19 @@
 package land.face.arena.data;
 
-import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import land.face.arena.StrifeArenaPlugin;
+import land.face.arena.events.ArenaEndEvent;
+import land.face.arena.events.ArenaWaveCompleteEvent;
 import land.face.arena.tasks.ArenaKickRunner;
 import land.face.arena.tasks.WaveRunner;
 import land.face.arena.tasks.WaveStartRunner;
+import land.face.strife.events.StrifeDamageEvent;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -23,7 +28,7 @@ public class ArenaInstance {
   private final Location location;
   private final Player player;
   private int wave = 0;
-  private long startTime;
+  private final long startTime;
 
   private WaveRunner waveRunner;
   private WaveStartRunner waveStartRunner;
@@ -49,6 +54,9 @@ public class ArenaInstance {
     waveRunner = new WaveRunner(this, arena.getWaves().get(wave), location);
     waveRunner.runTaskTimer(StrifeArenaPlugin.getInstance(), 1L, 20L);
     wave++;
+
+    StrifeArenaPlugin.getInstance().getLootManager().createLootBonusRecords(player);
+
     TitleUtils.sendTitle(player, TextUtils.color("&6Prepare For Battle!"),
         TextUtils.color("&eWave &f" + wave + " &ehas begun!"));
     player.getWorld().playSound(location, Sound.EVENT_RAID_HORN, 1, 1);
@@ -60,26 +68,35 @@ public class ArenaInstance {
 
     ArenaWave completedWave = arena.getWaves().get(wave - 1);
 
+    ArenaWaveCompleteEvent arenaWaveCompleteEvent =
+        new ArenaWaveCompleteEvent(arena.getId(), wave, player);
+    Bukkit.getPluginManager().callEvent(arenaWaveCompleteEvent);
+
     if (completedWave.getLootRewards() == null) {
       completedWave.setLootRewards(new ArrayList<>());
     }
     if (arena.getLootRewards() == null) {
       arena.setLootRewards(new ArrayList<>());
     }
+
+    float lootBonus = StrifeArenaPlugin.getInstance().getLootManager().getAvgLootBonus(player);
+    float rarityBonus = StrifeArenaPlugin.getInstance().getLootManager().getAvgRarityBonus(player);
+    float totalLootBonus = 1 + (lootBonus + rarityBonus);
     List<LootReward> rewards = new ArrayList<>(arena.getLootRewards());
     rewards.addAll(completedWave.getLootRewards());
+    rewards.addAll(StrifeArenaPlugin.getInstance().getArenaManager().getBaseRewards());
     for (LootReward reward : rewards) {
-      if (Math.random() > reward.getProbability()) {
+      if (Math.random() > reward.getProbability() * totalLootBonus) {
         continue;
       }
       StrifeArenaPlugin.getInstance().getLootManager().addItem(player, LootReward
           .toItemStack(reward, arena.getArenaLevel() + wave * arena.getArenaLevelPerWave()));
     }
 
-    StrifeArenaPlugin.getInstance().getLootManager().addExp(player, arena.getMinExpPerWave(),
-        arena.getMaxExpPerWave(), arena.getExpExponent(), completedWave.getExpBonus());
-    StrifeArenaPlugin.getInstance().getLootManager().addCash(player, arena.getMinMoneyPerWave(),
-        arena.getMaxMoneyPerWave(), arena.getMoneyExponent(), completedWave.getMoneyBonus());
+    StrifeArenaPlugin.getInstance().getLootManager().compoundCash(player);
+    StrifeArenaPlugin.getInstance().getLootManager().compoundExp(player);
+
+    StrifeArenaPlugin.getInstance().getLootManager().purgeLootBonusRecords(player);
 
     if (wave >= arena.getWaves().size()) {
       doArenaEnd(player);
@@ -108,17 +125,27 @@ public class ArenaInstance {
     bumpRecord(player, wave, time);
 
     location.getBlock().setType(Material.ENDER_CHEST);
+    MessageUtils.sendMessage(player, "&2&l&oARENA COMPLETE! NICE WORK GAMER!");
     StrifeArenaPlugin.getInstance().getLootManager().explodeLoot(player, location);
     if (arena.getWaves().size() != wave) {
+      ArenaEndEvent arenaEndEvent = new ArenaEndEvent(arena.getId(),
+          (int) TimeUnit.MILLISECONDS.toSeconds(time), false, player);
+      Bukkit.getPluginManager().callEvent(arenaEndEvent);
       TitleUtils.sendTitle(player, TextUtils.color("&2ARENA ENDED!"),
           TextUtils.color("&aCompleted &f" + wave + " &awaves!"));
       player.playSound(location, Sound.ENTITY_PLAYER_LEVELUP, 1, 0.8F);
     } else {
+      ArenaEndEvent arenaEndEvent = new ArenaEndEvent(arena.getId(),
+          (int) TimeUnit.MILLISECONDS.toSeconds(time), true, player);
+      Bukkit.getPluginManager().callEvent(arenaEndEvent);
       TitleUtils.sendTitle(player, TextUtils.color("&2ARENA COMPLETE!"),
           TextUtils.color("&aCompleted all &f" + wave + " &awaves!"));
+      long minutes = TimeUnit.MILLISECONDS.toMinutes(time);
+      long seconds = TimeUnit.MILLISECONDS.toSeconds(time) - ((minutes * 60));
+      MessageUtils.sendMessage(player, "&aCompletion Time: &b" + String.format("%dm %ds", minutes, seconds));
       player.playSound(location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1.5F);
     }
-    MessageUtils.sendMessage(player, "&aNice! You did it! Collect your loot then use &f/arena exit &ato leave!");
+    MessageUtils.sendMessage(player, "&aCollect your loot then use &f/arena exit &ato leave!");
     arenaKickRunner = null;
     arenaKickRunner = new ArenaKickRunner(this);
     arenaKickRunner.runTaskTimer(StrifeArenaPlugin.getInstance(), 100L, 20L);

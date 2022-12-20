@@ -24,52 +24,109 @@ import org.nunnerycode.mint.MintPlugin;
 
 public class LootManager {
 
+  private final StrifeArenaPlugin plugin;
+
   private final Map<UUID, Inventory> lootMap = new HashMap<>();
   private final Map<UUID, Double> cashMap = new HashMap<>();
   private final Map<UUID, Double> expMap = new HashMap<>();
 
-  private MintEconomy mintEconomy = MintPlugin.getInstance().getEconomy();
+  private final Map<UUID, Integer> storedLootEntries = new HashMap<>();
+  private final Map<UUID, Float> storedLootChance = new HashMap<>();
+  private final Map<UUID, Float> storedLootRarity = new HashMap<>();
+
+  private final Map<UUID, Float> storedCashExponent = new HashMap<>();
+  private final Map<UUID, Float> storedXpExponent = new HashMap<>();
+
+  private final MintEconomy mintEconomy = MintPlugin.getInstance().getEconomy();
+
+  private final float expExponentGain;
+  private final float cashExponentGain;
+
+  public LootManager(StrifeArenaPlugin plugin) {
+    this.plugin = plugin;
+    expExponentGain = (float) plugin.getSettings().getDouble("reward-xp-exponent", 1.01) - 1;
+    cashExponentGain = (float) plugin.getSettings().getDouble("reward-money-exponent", 1.01) - 1;
+  }
 
   public void initializeLoot(Player player) {
     lootMap.put(player.getUniqueId(), Bukkit.createInventory(player, 54, "The Loots"));
   }
 
-  public void addItem(Player player, ItemStack stack) {
-    lootMap.get(player.getUniqueId()).addItem(stack);
+  public void createLootBonusRecords(Player player) {
+    UUID uuid = player.getUniqueId();
+    storedLootEntries.put(uuid, 0);
+    storedLootChance.put(uuid, 0f);
+    storedLootRarity.put(uuid, 0f);
+  }
+
+  public void purgeLootBonusRecords(Player player) {
+    UUID uuid = player.getUniqueId();
+    storedLootEntries.remove(uuid);
+    storedLootChance.remove(uuid);
+    storedLootRarity.remove(uuid);
   }
 
   public void purgeLoot(Player player) {
     lootMap.remove(player.getUniqueId());
     cashMap.remove(player.getUniqueId());
     expMap.remove(player.getUniqueId());
+    storedXpExponent.remove(player.getUniqueId());
+    storedCashExponent.remove(player.getUniqueId());
+  }
+
+  public void addItem(Player player, ItemStack stack) {
+    lootMap.get(player.getUniqueId()).addItem(stack);
   }
 
   public Inventory getLootInventory(Player player) {
     return lootMap.get(player.getUniqueId());
   }
 
-  public void addCash(Player player, double min, double max, double exponent, double bonus) {
-    double current = cashMap.getOrDefault(player.getUniqueId(), 0D);
-    double newValue = Math.pow(current, exponent);
-    newValue += min + ((max - min) * Math.random());
-    newValue += bonus;
-    cashMap.put(player.getUniqueId(), newValue);
+  public void addLootBonusRecord(Player player, float quantity, float rarity) {
+    UUID uuid = player.getUniqueId();
+    storedLootEntries.put(uuid, storedLootEntries.get(uuid) + 1);
+    storedLootChance.put(uuid, storedLootChance.get(uuid) + quantity);
+    storedLootRarity.put(uuid, storedLootRarity.get(uuid) + rarity);
   }
 
-  public void addExp(Player player, double min, double max, double exponent, double bonus) {
+  public float getAvgLootBonus(Player player) {
+    UUID uuid = player.getUniqueId();
+    return storedLootChance.get(uuid) / storedLootEntries.get(uuid);
+  }
+
+  public float getAvgRarityBonus(Player player) {
+    UUID uuid = player.getUniqueId();
+    return storedLootRarity.get(uuid) / storedLootEntries.get(uuid);
+  }
+
+  public void addCash(Player player, double amount) {
+    double current = cashMap.getOrDefault(player.getUniqueId(), 0D);
+    cashMap.put(player.getUniqueId(), current + amount);
+  }
+
+  public void compoundCash(Player player) {
+    storedCashExponent.put(player.getUniqueId(),
+        storedCashExponent.getOrDefault(player.getUniqueId(), 1f) + cashExponentGain);
+  }
+
+  public void addExp(Player player, double amount) {
     double current = expMap.getOrDefault(player.getUniqueId(), 0D);
-    double newValue = Math.pow(current, exponent);
-    newValue += min + ((max - min) * Math.random());
-    newValue += bonus;
-    expMap.put(player.getUniqueId(), newValue);
+    expMap.put(player.getUniqueId(), current + amount);
+  }
+
+  public void compoundExp(Player player) {
+    storedXpExponent.put(player.getUniqueId(),
+        storedXpExponent.getOrDefault(player.getUniqueId(), 1f) + expExponentGain);
   }
 
   public double getCash(Player player) {
-    return cashMap.getOrDefault(player.getUniqueId(), 0D);
+    return cashMap.getOrDefault(player.getUniqueId(), 0D) *
+        storedCashExponent.getOrDefault(player.getUniqueId(), 1f);
   }
 
   public double getExp(Player player) {
-    return expMap.getOrDefault(player.getUniqueId(), 0D);
+    return expMap.getOrDefault(player.getUniqueId(), 0D) *
+        storedXpExponent.getOrDefault(player.getUniqueId(), 1f);
   }
 
   public void explodeLoot(Player player, Location location) {
@@ -86,15 +143,15 @@ public class LootManager {
       item.setVelocity(vec);
     }
     lootMap.put(player.getUniqueId(), null);
-    double money = cashMap.getOrDefault(player.getUniqueId(), 0D);
-    double exp = expMap.getOrDefault(player.getUniqueId(), 0D);
+    double money = getCash(player);
+    double exp = getExp(player);
     if (money >= 1) {
-      MessageUtils.sendMessage(player, "&6Arena Reward: &e+" + StrifeArenaPlugin.INT_FORMAT.format(money) + "◎");
+      MessageUtils.sendMessage(player, "&6 Bits Awarded: &e" + StrifeArenaPlugin.INT_FORMAT.format(money) + "◎");
       mintEconomy.depositPlayer(player, money);
     }
     if (exp >= 1) {
-      MessageUtils.sendMessage(player, "&2Arena Reward: &a+" + StrifeArenaPlugin.INT_FORMAT.format(exp) + " XP");
-      StrifePlugin.getInstance().getExperienceManager().addExperience(player, exp, false);
+      MessageUtils.sendMessage(player, "&2 XP Awarded: &a" + StrifeArenaPlugin.INT_FORMAT.format(exp) + " XP");
+      StrifePlugin.getInstance().getExperienceManager().addExperience(player, exp, true);
     }
     purgeLoot(player);
     player.playSound(location, Sound.BLOCK_CHEST_OPEN, 2, 1F);

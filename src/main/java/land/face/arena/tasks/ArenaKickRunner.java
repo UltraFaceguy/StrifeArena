@@ -29,7 +29,7 @@ public class ArenaKickRunner extends BukkitRunnable {
 
   private final ArenaInstance instance;
   private int seconds = 60;
-  private final String blank = " " + ChatColor.GRAY + " ";
+  private final String blank = "   " + ChatColor.GRAY + "   ";
   private final String secondLeft = TextUtils.color("&eArena closing in &f{0}s");
   private final String exitArena = TextUtils.color("&eExiting Arena!");
 
@@ -40,12 +40,12 @@ public class ArenaKickRunner extends BukkitRunnable {
   @Override
   public void run() {
     if (instance.getPlayer().isValid() && seconds > 0) {
-      TitleUtils.sendTitle(instance.getPlayer(), blank, secondLeft.replace("{0}",
-          String.valueOf(seconds)), 10, 1, 5);
+      instance.getPlayer().sendTitle(blank,
+          secondLeft.replace("{0}", String.valueOf(seconds)), 0, 30, 5);
       seconds--;
       return;
     }
-    TitleUtils.sendTitle(instance.getPlayer(), blank, exitArena, 20, 0, 5);
+    instance.getPlayer().sendTitle(blank, exitArena, 0, 30, 5);
     StrifeArenaPlugin.getInstance().getArenaManager().exitArena(instance.getPlayer(), true);
     cancel();
   }

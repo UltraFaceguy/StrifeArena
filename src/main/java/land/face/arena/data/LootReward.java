@@ -2,7 +2,6 @@ package land.face.arena.data;
 
 import info.faceland.loot.LootPlugin;
 import info.faceland.loot.data.ItemRarity;
-import info.faceland.loot.items.prefabs.IdentityTome;
 import info.faceland.loot.tier.Tier;
 import org.bukkit.inventory.ItemStack;
 
@@ -87,10 +86,6 @@ public class LootReward {
       case CUSTOM:
         return LootPlugin.getInstance().getCustomItemManager()
             .getCustomItem(lootReward.getDataString()).toItemStack(lootReward.amount);
-      case ID_TOME:
-        ItemStack stack = new IdentityTome();
-        stack.setAmount(lootReward.amount);
-        return stack;
       case SCROLL:
         if ("random".equals(lootReward.dataString)) {
           return LootPlugin.getInstance().getScrollManager()

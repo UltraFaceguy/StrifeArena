@@ -27,8 +27,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class StrifeArenaPlugin extends JavaPlugin {
 
   private static StrifeArenaPlugin instance;
-  public static final DecimalFormat INT_FORMAT = new DecimalFormat("#");
-  public static final DecimalFormat ONE_DECIMAL = new DecimalFormat("#.#");
+  public static final DecimalFormat INT_FORMAT = new DecimalFormat("###,###,###,###");
 
   private ArenaManager arenaManager;
   private LootManager lootManager;
@@ -61,12 +60,12 @@ public class StrifeArenaPlugin extends JavaPlugin {
     settings = MasterConfiguration.loadFromFiles(configYAML);
 
     arenaManager = new ArenaManager(this);
-    lootManager = new LootManager();
+    lootManager = new LootManager(this);
     recordManager = new RecordManager(this);
 
     Bukkit.getPluginManager().registerEvents(new ArenaExitListener(this), this);
     Bukkit.getPluginManager().registerEvents(new ArenaChestListener(this), this);
-    Bukkit.getPluginManager().registerEvents(new MobDropListener(), this);
+    Bukkit.getPluginManager().registerEvents(new MobDropListener(this), this);
 
     rewardsMenu = new ArenaRewardsMenu();
 
@@ -74,6 +73,7 @@ public class StrifeArenaPlugin extends JavaPlugin {
     arenaManager.updateRecordUsernames();
 
     commandManager = new PaperCommandManager(this);
+
     commandManager.registerCommand(new ArenaCommand(this));
     commandManager.getCommandCompletions()
         .registerCompletion("arenas", c -> arenaManager.getArenaIds());

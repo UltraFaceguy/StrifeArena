@@ -19,16 +19,17 @@
 package land.face.arena.tasks;
 
 import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
-import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
 import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.data.ArenaInstance;
+import org.bukkit.ChatColor;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class WaveStartRunner extends BukkitRunnable {
 
-  private ArenaInstance instance;
+  private final ArenaInstance instance;
   private int seconds = 60;
-  private String secondLeft = TextUtils.color("&eNext wave in &f{0}s");
+  private final String blank = "   " + ChatColor.GRAY + "   ";
+  private final String secondLeft = TextUtils.color("&eNext wave in &f{0}s");
 
   public WaveStartRunner(ArenaInstance instance) {
     this.instance = instance;
@@ -41,8 +42,8 @@ public class WaveStartRunner extends BukkitRunnable {
       return;
     }
     if (seconds > 0) {
-      TitleUtils.sendTitle(instance.getPlayer(), "", secondLeft.replace("{0}",
-          String.valueOf(seconds)), 10, 1, 5);
+      instance.getPlayer().sendTitle(blank, secondLeft.replace("{0}",
+          String.valueOf(seconds)), 0, 30, 5);
       seconds--;
       return;
     }

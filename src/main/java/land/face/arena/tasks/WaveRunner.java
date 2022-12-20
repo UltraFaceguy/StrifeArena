@@ -22,11 +22,9 @@ import static org.bukkit.attribute.Attribute.GENERIC_FOLLOW_RANGE;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import land.face.arena.StrifeArenaPlugin;
 import land.face.arena.data.ArenaInstance;
 import land.face.arena.data.ArenaSpawn;
 import land.face.arena.data.ArenaWave;
-import land.face.arena.data.BasicLocation;
 import land.face.arena.listeners.MobDropListener;
 import land.face.strife.StrifePlugin;
 import land.face.strife.data.StrifeMob;
@@ -34,17 +32,16 @@ import org.bukkit.Location;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
-import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class WaveRunner extends BukkitRunnable {
 
-  private ArenaInstance instance;
-  private ArenaWave wave;
-  private Location location;
+  private final ArenaInstance instance;
+  private final ArenaWave wave;
+  private final Location location;
   private int index = 0;
   private int tasksExecuted = 0;
-  private List<LivingEntity> summons = new CopyOnWriteArrayList<>();
+  private final List<LivingEntity> summons = new CopyOnWriteArrayList<>();
 
   public WaveRunner(ArenaInstance instance, ArenaWave wave, Location location) {
     this.instance = instance;
@@ -78,13 +75,12 @@ public class WaveRunner extends BukkitRunnable {
               followRange.getDefaultValue()), 32);
           followRange.setBaseValue(newVal);
         }
-        mob.getEntity().setMetadata(MobDropListener.ARENA_META, new FixedMetadataValue(
-            StrifeArenaPlugin.getInstance(), true));
         if (mob.getEntity() instanceof Mob) {
           ((Mob) mob.getEntity()).setTarget(instance.getPlayer());
         }
         if (mob.getEntity().isValid()) {
           summons.add(mob.getEntity());
+          MobDropListener.addHandledMob(mob.getEntity());
         }
       }
     }
@@ -93,10 +89,6 @@ public class WaveRunner extends BukkitRunnable {
   }
 
   public void clearSummons() {
-    for (LivingEntity le : summons) {
-      if (le == null || !le.isValid()) {
-        summons.remove(le);
-      }
-    }
+    summons.removeIf(le -> le == null || !le.isValid());
   }
 }

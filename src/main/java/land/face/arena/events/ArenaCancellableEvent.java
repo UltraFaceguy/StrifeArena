@@ -22,10 +22,9 @@
  */
 package land.face.arena.events;
 
-import info.faceland.loot.api.events.LootEvent;
 import org.bukkit.event.Cancellable;
 
-public class ArenaCancellableEvent extends LootEvent implements Cancellable {
+public class ArenaCancellableEvent extends ArenaEvent implements Cancellable {
 
     private boolean cancelled;
 
